@@ -276,7 +276,10 @@ function peg$parse(input, options) {
   var peg$f3 = function(val) {console.log(val, 3);return val};
   var peg$f4 = function(val) {return val};
   var peg$f5 = function(id) { usos.push(id) };
-  var peg$f6 = function(val) {console.log(val, 2);return val};
+  var peg$f6 = function(val, temp) { 
+            console.log(val, 2); 
+            return (temp === "i") ? new n.String(val, true) : new n.String(val, false)
+        };
   var peg$f7 = function(contenido) {
         return `Entrada válida: [${input}]`;
     };
@@ -286,9 +289,9 @@ function peg$parse(input, options) {
             }
             return `${inicio}-${fin}`;
         };
-  var peg$f9 = function() { return text()};
-  var peg$f10 = function(value) {console.log(text(), 1);return new n.String(text())};
-  var peg$f11 = function(value) {return new n.String(value)};
+  var peg$f9 = function() { return text() };
+  var peg$f10 = function(value) { console.log(text(), 1); return text() };
+  var peg$f11 = function(value) { return text() };
   var peg$f12 = function() { return text() };
   var peg$currPos = options.peg$currPos | 0;
   var peg$savedPos = peg$currPos;
@@ -837,7 +840,7 @@ function peg$parse(input, options) {
           s2 = null;
         }
         peg$savedPos = s0;
-        s0 = peg$f6(s1);
+        s0 = peg$f6(s1, s2);
       } else {
         peg$currPos = s0;
         s0 = peg$FAILED;

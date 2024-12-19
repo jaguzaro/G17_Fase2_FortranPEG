@@ -40,7 +40,10 @@ varios
 
 expresiones 
     =  id:identificador { usos.push(id) }
-    /  val:literales "i"? {console.log(val, 2);return val}
+    /  val:literales temp:"i"? { 
+            console.log(val, 2); 
+            return (temp === "i") ? new n.String(val, true) : new n.String(val, false)
+        }
     /  "(" _ opciones _ ")"
     /  corchetes "i"?
     /  "."
@@ -67,7 +70,7 @@ rango
         }      
 
 caracter
-    = [a-zA-Z0-9_ ] { return text()}
+    = [a-zA-Z0-9_ ] { return text() }
 
 contenido
     = (corchete / texto)+
@@ -79,8 +82,8 @@ texto
     = [^\[\]]+
 
 literales 
-    = '"' value:stringDobleComilla* '"' {console.log(text(), 1);return new n.String(text()))}
-    / "'" value:stringSimpleComilla* "'" {return new n.String(value)}
+    = '"' value:stringDobleComilla* '"' { console.log(text(), 1); return text() }
+    / "'" value:stringSimpleComilla* "'" { return text() }
 
 stringDobleComilla 
     = !('"' / "\\" / finLinea) .
