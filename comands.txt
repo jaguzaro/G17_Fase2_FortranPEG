@@ -1,0 +1,6 @@
+Comando para inicializar la aplicacion
+#peggy
+peggy --format es -o ./peg-parser.js ./gramatica.pegjs
+
+#generar nodos
+node Generator.js

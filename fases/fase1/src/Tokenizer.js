@@ -30,15 +30,21 @@ end module tokenizer`;
     }
 
     visitString(node) {
+        console.log();
+        const n = {
+            val: node.value,  
+            offset: node.value.substring(1, node.value.length-1).length - 1,
+            length: node.value.substring(1, node.value.length-1).length
+        }   
         let template = `
-        if ( 1 == input(cursor:cursor + 1) ) then
-            allocate( character(len=1) :: lexeme)
-            lexeme = input(cursor:cursor + 1)
-            cursor = cursor + 1
+        if ( ${n.val} == input(cursor:cursor + ${n.offset}) ) then
+            allocate( character(len=${n.length}) :: lexeme)
+            lexeme = input(cursor:cursor + ${n.offset})
+            cursor = cursor + ${n.length}
             return
         end if
-        `;
-
+        `;  
+        
         return template
     }
 }

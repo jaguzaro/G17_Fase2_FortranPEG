@@ -40,11 +40,11 @@ varios
 
 expresiones 
     =  id:identificador { usos.push(id) }
-    / val:literales "i"? {console.log(val, 2);return val}
-    / "(" _ opciones _ ")"
-    / corchetes "i"?
-    / "."
-    / "!."
+    /  val:literales "i"? {console.log(val, 2);return val}
+    /  "(" _ opciones _ ")"
+    /  corchetes "i"?
+    /  "."
+    /  "!."
 
 conteo
     = "|" _ (numero / id:identificador) _ "|"
@@ -79,7 +79,7 @@ texto
     = [^\[\]]+
 
 literales 
-    = '"' value:stringDobleComilla* '"' {console.log(text(), 1);return new n.String(text())}
+    = '"' value:stringDobleComilla* '"' {console.log(text(), 1);return new n.String(text()))}
     / "'" value:stringSimpleComilla* "'" {return new n.String(value)}
 
 stringDobleComilla 
