@@ -45,7 +45,9 @@ expresiones
             return (temp === "i") ? new n.String(val, true) : new n.String(val, false)
         }
     /  "(" _ opciones _ ")"
-    /  corchetes "i"?
+    /  valor:corchetes "i"? {
+        return new n.Range(valor.join(''));
+    }
     /  "."
     /  "!."
 
@@ -56,9 +58,7 @@ conteo
     / "|" _ (numero / id:identificador)? _ ".." _ (numero / id2:identificador)? _ "," _ opciones _ "|"
 
 corchetes
-    = "[" contenido:(rango / contenido)+ "]" {
-        return `Entrada válida: [${input}]`;
-    }
+    = "[" contenido:(rango / contenido)+ "]" { return contenido; }
 
 rango
     = inicio:caracter "-" fin:caracter 
@@ -73,13 +73,13 @@ caracter
     = [a-zA-Z0-9_ ] { return text() }
 
 contenido
-    = (corchete / texto)+
+    = valor:(corchete / texto)+   { return valor; }
 
 corchete
-    = "[" contenido "]"
+    = "[" valor:contenido "]"   { return valor; }
 
 texto
-    = [^\[\]]+
+    = [^\[\]]+  { return text(); }
 
 literales 
     = '"' value:stringDobleComilla* '"' { console.log(text(), 1); return text() }

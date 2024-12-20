@@ -16,7 +16,7 @@ module tokenizer
         integer :: i, j
 
         do i = 1, len(strIn)
-        j = iachar(strIn(i:i))
+            j = iachar(strIn(i:i))
             if(j >= iachar("A") .and. j <= iachar("Z")) then
                 strOut(i:i) = achar(iachar(strIn(i:i)) + 32)
             else
@@ -74,6 +74,43 @@ end module tokenizer`;
             end if
         `
         return template
+    }
+
+    visitRange(node) {
+        const n = { val: node.characters };
+
+        let template = ``;
+        let copy = n.val;
+        const regex = /([^\s])-([^\s])/gm;
+        const found = copy.match(regex);
+
+        if (found?.length > 0) {
+            found.forEach(element => {
+                template += `
+                    if(iachar(input(cursor:cursor)) >= iachar('${element[0]}') .and. iachar(input(cursor:cursor)) <= iachar('${element[2]}')) then
+                        allocate(character(len=1) :: lexeme)
+                        lexeme = input(cursor:cursor)
+                        cursor = cursor + 1
+                        return
+                    end if
+                `;
+            });
+        }
+
+        copy = [... new Set(copy.replace(regex, ''))].map(char => `'${char}'`);
+
+        if (copy.length > 0) {
+            template += `
+                if(findloc([${copy.join(', ')}], input(cursor:cursor), 1) > 0) then
+                    allocate(character(len=1) :: lexeme)
+                    lexeme = input(cursor:cursor)
+                    cursor = cursor + 1
+                    return
+                end if
+            `;
+        }
+    
+        return template;
     }
 }
 

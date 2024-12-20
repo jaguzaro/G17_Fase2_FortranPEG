@@ -120,6 +120,7 @@ export class String extends Node{
 
 export class Range extends Node{
     constructor(characters) {
+        super();
         this.characters = characters;
     }
 
