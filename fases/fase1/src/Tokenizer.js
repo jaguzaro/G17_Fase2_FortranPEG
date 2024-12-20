@@ -41,8 +41,20 @@ end module tokenizer`;
         console.log(template)
     }
 
-    visitRule(node){
-        return node.expression.accept(this)
+    visitProductions(node){
+        return node.expr.accept(this)
+    }
+
+    visitOptions(node){
+        return node.exprs.map((node) => node.accept(this)).join('\n');
+    }
+
+    visitUnion(node){
+        return node.exprs.map((node) => node.accept(this)).join('\n');
+    }
+
+    visitExpression(node){
+        return node.expr.accept(this)
     }
 
     visitString(node) {
@@ -50,7 +62,8 @@ end module tokenizer`;
             val: node.value.toLowerCase(),  
             offset: node.value.substring(1, node.value.length-1).length - 1,
             length: node.value.substring(1, node.value.length-1).length,
-            isSensitive: node.caseSensitive
+            isSensitive: node.caseSensitive,
+            qty: node.qty
         }  
 
         let template = ``
@@ -77,7 +90,7 @@ end module tokenizer`;
     }
 
     visitRange(node) {
-        const n = { val: node.characters };
+        const n = { val: node.characters, qty: node.qty };
 
         let template = ``;
         let copy = n.val;

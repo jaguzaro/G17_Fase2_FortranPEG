@@ -1,164 +1,75 @@
-import Node from "../src/Nodes.js";
-export class Rule extends Node{
-    constructor(id, expression, alias) {
+
+import Node from '../src/Nodes.js';
+
+export class Productions extends Node {
+    constructor(id, expr, alias) {
         super();
         this.id = id;
-		this.expression = expression;
+		this.expr = expr;
 		this.alias = alias;
     }
 
-    accept(visitor){
-        return visitor.visitRule(this);
+    accept(visitor) {
+        return visitor.visitProductions(this);
     }
 }
-
-
-export class Choice extends Node{
-    constructor(expressions) {
-        this.expressions = expressions;
+    
+export class Options extends Node {
+    constructor(exprs) {
+        super();
+        this.exprs = exprs;
     }
 
-    accept(visitor){
-        return visitor.visitChoice(this);
-    }
-}
-
-
-export class Concatenation extends Node{
-    constructor(expressions) {
-        this.expressions = expressions;
-    }
-
-    accept(visitor){
-        return visitor.visitConcatenation(this);
+    accept(visitor) {
+        return visitor.visitOptions(this);
     }
 }
-
-
-export class Pluck extends Node{
-    constructor(expression, pluck) {
-        this.expression = expression;
-		this.pluck = pluck;
+    
+export class Union extends Node {
+    constructor(exprs) {
+        super();
+        this.exprs = exprs;
     }
 
-    accept(visitor){
-        return visitor.visitPluck(this);
-    }
-}
-
-
-export class Label extends Node{
-    constructor(expression, identifier) {
-        this.expression = expression;
-		this.identifier = identifier;
-    }
-
-    accept(visitor){
-        return visitor.visitLabel(this);
+    accept(visitor) {
+        return visitor.visitUnion(this);
     }
 }
-
-
-export class Expression extends Node{
-    constructor(expression, quantifier, text) {
-        this.expression = expression;
-		this.quantifier = quantifier;
-		this.text = text;
+    
+export class Expression extends Node {
+    constructor(expr, label, qty) {
+        super();
+        this.expr = expr;
+		this.label = label;
+		this.qty = qty;
     }
 
-    accept(visitor){
+    accept(visitor) {
         return visitor.visitExpression(this);
     }
 }
-
-
-export class Quantifier extends Node{
-    constructor(value) {
-        this.value = value;
-    }
-
-    accept(visitor){
-        return visitor.visitQuantifier(this);
-    }
-}
-
-
-export class ParsingExpression extends Node{
-    constructor(expression) {
-        this.expression = expression;
-    }
-
-    accept(visitor){
-        return visitor.visitParsingExpression(this);
-    }
-}
-
-
-export class Group extends Node{
-    constructor(expression) {
-        this.expression = expression;
-    }
-
-    accept(visitor){
-        return visitor.visitGroup(this);
-    }
-}
-
-
-export class String extends Node{
-    constructor(value, caseSensitive) {
+    
+export class String extends Node {
+    constructor(val, isCase) {
         super();
-        this.value = value;
-		this.caseSensitive = caseSensitive;
+        this.val = val;
+		this.isCase = isCase;
     }
 
-    accept(visitor){
+    accept(visitor) {
         return visitor.visitString(this);
     }
 }
-
-
-export class Range extends Node{
-    constructor(characters) {
+    
+export class Range extends Node {
+    constructor(characters, isCase) {
         super();
         this.characters = characters;
+		this.isCase = isCase;
     }
 
-    accept(visitor){
+    accept(visitor) {
         return visitor.visitRange(this);
     }
 }
-
-
-export class InputRange extends Node{
-    constructor(value) {
-        this.value = value;
-    }
-
-    accept(visitor){
-        return visitor.visitInputRange(this);
-    }
-}
-
-
-export class Identifier extends Node{
-    constructor(value) {
-        this.value = value;
-    }
-
-    accept(visitor){
-        return visitor.visitIdentifier(this);
-    }
-}
-
-
-export class Number extends Node{
-    constructor(value) {
-        this.value = value;
-    }
-
-    accept(visitor){
-        return visitor.visitNumber(this);
-    }
-}
-
+    

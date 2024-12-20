@@ -21,16 +21,29 @@ gramatica
         }
 
 producciones
-    = _ id:identificador _ (literales)? _ "=" _ val:opciones (_";")? { ids.push(id); console.log(val, 4); return val }
+    = _ id:identificador _ alias:(literales)? _ "=" _ expr:opciones (_";")?
+        { 
+            ids.push(id);
+            return new n.Production(id, expr, alias);
+        }
 
 opciones 
-    = val:union (_ "/" _ union)* {return val}
+    = expr:union rest:(_ "/" _ union)*
+        {
+            return new n.Options([expr, ...rest]);
+        }
 
 union 
-    = val:expresion (_ expresion !(_ literales? _ "=") )* {console.log(val, 3);return val}
+    = expr:expresion rest:(_ expresion !(_ literales? _ "=") )*
+        {
+            return new n.Union([expr, ...rest])
+        }
 
 expresion 
-    = (etiqueta/varios)? _ val:expresiones _ ([?+*]/conteo)? {return val}
+    = label:$(etiqueta/varios)? _ expr:expresiones _ qty:$([?+*]/conteo)?
+        {
+            return new n.Expression(expr, label, qty)
+        }
 
 etiqueta 
     = ("@")? _ id:identificador _ ":" (varios)?
@@ -40,14 +53,15 @@ varios
 
 expresiones 
     =  id:identificador { usos.push(id) }
-    /  val:literales temp:"i"? { 
-            console.log(val, 2); 
-            return (temp === "i") ? new n.String(val, true) : new n.String(val, false)
+    /  val:literales temp:"i"? 
+        {
+            return new n.String(val, temp === "i");
         }
     /  "(" _ opciones _ ")"
-    /  valor:corchetes "i"? {
-        return new n.Range(valor.join(''));
-    }
+    /  valor:corchetes temp:"i"? 
+        {
+            return new n.Range(valor, temp === "i");
+        }
     /  "."
     /  "!."
 
