@@ -36,13 +36,13 @@ export default class SyntaxTreeVisitor extends Visitor {
         }
     }
     visitString(node) {
-        return new Syntax.Hoja(node.val, ++this.nodeCounter, "string");
+        return new Syntax.Hoja(node.val, ++this.nodeCounter, "string", node.isCase);
     }
     visitClass(node) {
-        return new Syntax.Hoja(node.chars.join(''), ++this.nodeCounter, "class");
+        return new Syntax.Hoja(node.chars.join(''), ++this.nodeCounter, "class", node.isCase);
     }
     visitRange(node) {
-        return new Syntax.Hoja(node.characters, ++this.nodeCounter, "range");
+        return new Syntax.Hoja(node.characters, ++this.nodeCounter, "range", node.isCase);
     }
     visitIdentifier(node) {
         const subTree = this.CST.find((subTree) => subTree.id === node.id);

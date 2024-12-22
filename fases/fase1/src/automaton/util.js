@@ -27,7 +27,9 @@ export default function generateSyntaxTree(CST) {
             let body = {
                 leaf: nodeCounter,
                 symb: node.val,
-                fp: []
+                fp: [],
+                isCase: node.isCase,
+                type: node.type
             }
             followPosTable.push(body)
         }
@@ -88,7 +90,9 @@ export default function generateSyntaxTree(CST) {
             combined.filter((item,index,self)=>
                 self.findIndex(obj => obj.symb === item.symb) === index).map(item => ({
                     symb: item.symb.toString(),
-                    transition: ""
+                    transition: "",
+                    isCase: item.isCase,
+                    type: item.type
                 }))
         
     })
@@ -119,6 +123,8 @@ export default function generateSyntaxTree(CST) {
                                 .map((item) => ({
                                     symb: item.symb.toString(),
                                     transition: "",
+                                    isCase: item.isCase,
+                                    type: item.type
                                 })),
                         });
                     }
