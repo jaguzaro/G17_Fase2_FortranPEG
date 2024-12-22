@@ -1,4 +1,4 @@
-export class ErrorReglas extends Error {
+export default class ErrorReglas extends Error {
     /**
      * @param {string} message
      */
