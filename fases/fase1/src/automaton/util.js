@@ -183,7 +183,7 @@ export async function generateSyntaxTree(CST) {
     transitionTable?.forEach((transition) => {
         const flag = transition.symbs.some(current => current.transition.length > 0);
         if (flag) {
-            codeFortran += `if (current_state == ${transition.state}) then\n`;
+            codeFortran += `\n if (current_state == ${transition.state}) then\n`;
             transition.symbs.forEach((symb) => {
                 if (transition.state === 0 && symb.transition.length > 0) codeFortran += `current_state = ${symb.transition}`;
                 if (symb.type === 'string' && symb.transition.length > 0)  {
@@ -192,7 +192,7 @@ export async function generateSyntaxTree(CST) {
                     codeFortran += fortranRange(symb.symb, symb.transition, symb.isCase);
                 }
             });
-            codeFortran += `end if\n`;
+            codeFortran += `\n end if\n`;
         }
     });
 
