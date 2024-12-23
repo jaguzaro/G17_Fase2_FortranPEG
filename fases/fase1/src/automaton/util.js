@@ -150,6 +150,22 @@ export async function generateSyntaxTree(CST) {
             save next_state
 
             contains
+
+                function to_lower(strIn) result(strOut)
+                    character(len=*), intent(in) :: strIn
+                    character(len=len(strIn)) :: strOut
+                    integer :: i, j
+
+                    do i = 1, len(strIn)
+                        j = iachar(strIn(i:i))
+                        if(j >= iachar("A") .and. j <= iachar("Z")) then
+                            strOut(i:i) = achar(iachar(strIn(i:i)) + 32)
+                        else
+                            strOut(i:i) = strIn(i:i)
+                        end if
+                    end do
+                end function to_lower
+
                 function nextSym(input, cursor) result(lexeme)
                     character(len=*), intent(in) :: input
                     integer, intent(inout) :: cursor
@@ -211,12 +227,16 @@ export async function generateSyntaxTree(CST) {
         }
 
         template += `
-                next_state = ${state}
+                if(len_temp > 0) then
+                    next_state = ${state}
+                end if
                 if (current_state /= next_state) then
                     allocate(character(len=len_temp) :: lexeme)
                     lexeme = temp_lexeme(:len_temp)
                     return
                 else
+                    current_state = ${state}
+                    next_state = ${state}
                     len_temp = len_temp + ${len}
                     temp_lexeme(len_temp:len_temp) = input(cursor:cursor+${offset})
                     cursor = cursor + ${len}
@@ -238,12 +258,16 @@ export async function generateSyntaxTree(CST) {
             rangesFound.forEach(range => {
                 template += `
                     if(iachar(input(cursor:cursor)) >= iachar('${range[0]}') .and. iachar(input(cursor:cursor)) <= iachar('${range[2]}')) then
-                        next_state = ${state}
+                        if(len_temp > 0) then
+                            next_state = ${state}
+                        end if
                         if (current_state /= next_state) then
                             allocate(character(len=len_temp) :: lexeme)
                             lexeme = temp_lexeme(:len_temp)
                             return
                         else
+                            current_state = ${state}
+                            next_state = ${state}
                             len_temp = len_temp + 1
                             temp_lexeme(len_temp:len_temp) = input(cursor:cursor)
                             cursor = cursor + 1
@@ -290,12 +314,17 @@ export async function generateSyntaxTree(CST) {
             const temporal = [...spaces, ...asciiChars].join(', ');
             template += `
                 if(findloc([${temporal}], input(cursor:cursor), 1) > 0) then
-                    next_state = ${state}
+                    if(len_temp > 0) then
+                        next_state = ${state}
+                    end if
                     if (current_state /= next_state) then
                         allocate(character(len=len_temp) :: lexeme)
                         lexeme = temp_lexeme(:len_temp)
+                        next_state = current_state
                         return
                     else
+                        current_state = ${state}
+                        next_state = ${state}
                         len_temp = len_temp + 1
                         temp_lexeme(len_temp:len_temp) = input(cursor:cursor)
                         cursor = cursor + 1
