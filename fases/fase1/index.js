@@ -1,7 +1,7 @@
 import * as monaco from 'https://cdn.jsdelivr.net/npm/monaco-editor@0.50.0/+esm';
 import  {parse}  from './src/parser/gramatica.js';
 import { generateTokenizer } from './src/tokenizer/utils.js';
-import  generateSyntaxTree  from './src/automaton/util.js';
+import  { generateSyntaxTree }  from './src/automaton/util.js';
 
 
 export let ids = []
@@ -32,18 +32,19 @@ const salida = monaco.editor.create(
 let decorations = [];
 
 // Analizar contenido del editor
+let cst;
 const analizar = () => {
     const entrada = editor.getValue();
     ids.length = 0
     usos.length = 0
     errores.length = 0
     try {
-        const cst = parse(entrada)
-        console.log(cst)
-        const tree = generateSyntaxTree(cst)
-        console.log(tree)
-        const text = generateTokenizer(cst)
-        console.log(text)
+        cst = parse(entrada)
+        //console.log(cst)
+        //const tree = generateSyntaxTree(cst)
+        //console.log(tree)
+        //const text = generateTokenizer(cst)
+        //console.log(text)
 
         if(errores.length > 0){
             salida.setValue(
@@ -58,7 +59,7 @@ const analizar = () => {
         // Limpiar decoraciones previas si la validación es exitosa
         decorations = editor.deltaDecorations(decorations, []);
     } catch (e) {
-
+        cst = null
         if(e.location === undefined){
             
             salida.setValue(
@@ -104,10 +105,44 @@ const analizar = () => {
     }
 };
 
-// Escuchar cambios en el contenido del editor
 editor.onDidChangeModelContent(() => {
     analizar();
 });
+
+let downloadHappening = false;
+const button = document.getElementById('BotonDescarga');
+button.addEventListener('click', () => {
+    if (downloadHappening) return;
+
+    if (!cst) {
+        alert('Escribe una gramática válida');
+        return;
+    }
+
+    downloadHappening = true;
+
+    generateSyntaxTree(cst)
+        .then((fileContents) => {
+            const blob = new Blob([fileContents], { type: 'text/plain' });
+            const url = URL.createObjectURL(blob);
+
+            const tempLink = document.createElement('a');
+            tempLink.href = url;
+            tempLink.download = 'tokenizer.f90';
+            document.body.appendChild(tempLink);
+            tempLink.click();
+            document.body.removeChild(tempLink);
+            URL.revokeObjectURL(url);
+        })
+        .catch((error) => {
+            console.error('Error al generar el archivo:', error);
+        })
+        .finally(() => {
+            downloadHappening = false;
+        });
+});
+
+
 
 // CSS personalizado para resaltar el error y agregar un warning
 const style = document.createElement('style');

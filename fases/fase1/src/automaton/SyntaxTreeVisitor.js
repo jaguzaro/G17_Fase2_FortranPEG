@@ -47,12 +47,10 @@ export default class SyntaxTreeVisitor extends Visitor {
     }
     visitIdentifier(node) {
         const subTree = this.CST.find((subTree) => subTree.id === node.id);
-        console.log("==== SUBTREE =====",subTree)
         return subTree.expr.accept(this);
     }
 
     visitAny(node){
-        console.log(node)
         return new Syntax.Hoja(node.val, ++this.nodeCounter, "range", false, node.assertion);
     }
 }

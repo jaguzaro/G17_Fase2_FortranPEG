@@ -6,7 +6,7 @@ import SyntaxTreeVisitor from './SyntaxTreeVisitor.js';
  *
  * @param {Productions[]} CST
  */
-export default function generateSyntaxTree(CST) {
+export async function generateSyntaxTree(CST) {
 
     let followPosTable = [];
     let leafValue = [];
@@ -14,7 +14,6 @@ export default function generateSyntaxTree(CST) {
     let transitionTable = [];
 
     let nodeCounter = 0
-    console.log(CST)
     const visitor = new SyntaxTreeVisitor(CST);
     const syntaxTree = [CST[0]].map((subTree) => subTree.accept(visitor)).reduce(
         (tree, subTree) => new Or(tree, subTree)
@@ -69,7 +68,6 @@ export default function generateSyntaxTree(CST) {
     const finalTree = new Concat(syntaxTree, new Hoja('#', ++nodeCounter));
     postOrderTraversal(finalTree, visitFollow);
 
-    console.log(followPosTable)
     
     function combineFpForConsecutiveSymbs(array) {
         for (let i = 0; i < array.length - 1; i++) {
@@ -99,8 +97,6 @@ export default function generateSyntaxTree(CST) {
         
     })
 
-    console.log("Combined =====>", followPosTable)
-    console.log("Transition Table 1 =====>", transitionTable)
 
 
     function arraysEqual(a, b) {
@@ -139,52 +135,115 @@ export default function generateSyntaxTree(CST) {
         });
     }
 
-    console.log("Transition Table 2 =====>", transitionTable)
     
-    let codeFortran = ``;
+    let codeFortran = `
+        module parser
+            implicit none
+            integer :: current_state = 0
+            integer :: next_state = 0
+            save current_state
+            save next_state
+
+            contains
+
+                function to_lower(strIn) result(strOut)
+                    character(len=*), intent(in) :: strIn
+                    character(len=len(strIn)) :: strOut
+                    integer :: i, j
+
+                    do i = 1, len(strIn)
+                        j = iachar(strIn(i:i))
+                        if(j >= iachar("A") .and. j <= iachar("Z")) then
+                            strOut(i:i) = achar(iachar(strIn(i:i)) + 32)
+                        else
+                            strOut(i:i) = strIn(i:i)
+                        end if
+                    end do
+                end function to_lower
+
+                function nextSym(input, cursor) result(lexeme)
+                    character(len=*), intent(in) :: input
+                    integer, intent(inout) :: cursor
+                    character(len=:), allocatable :: lexeme
+                    integer :: len_temp
+                    character(len=1000) :: temp_lexeme
+
+                    temp_lexeme = ""
+                    len_temp = 0
+
+                    if(cursor > len(input)) then
+                        allocate( character(len=3) :: lexeme )
+                        lexeme = "EOF"
+                        return
+                    end if
+
+                    do while(cursor <= len(input))
+    `;
 
     transitionTable?.forEach((transition) => {
         const flag = transition.symbs.some(current => current.transition.length > 0);
         if (flag) {
-            codeFortran += `if (state == ${transition.state}) then`;
+            codeFortran += `\n if (current_state == ${transition.state}) then\n`;
             transition.symbs.forEach((symb) => {
-                if (symb.type === 'string' && symb.transition.length > 0) {
+                if (transition.state === 0 && symb.transition.length > 0) codeFortran += `current_state = ${symb.transition}`;
+                if (symb.type === 'string' && symb.transition.length > 0)  {
                     codeFortran += fortranString(symb.symb, symb.transition, symb.isCase);
                 } else if (symb.type === 'range' && symb.transition.length > 0 && (symb.symb != "." && symb.assertion != "!")) {
                     codeFortran += fortranRange(symb.symb, symb.transition, symb.isCase);
                 }
             });
-            codeFortran += `end if`;
+            codeFortran += `\n end if\n`;
         }
     });
 
-    console.log(codeFortran);
+    codeFortran += `
+                end do
+                if(cursor > len(input))then
+                    allocate(character(len=len_temp) :: lexeme)
+                    lexeme = temp_lexeme(:len_temp)
+                    return 
+                end if
+            end function nextSym
+        end module parser
+    `;
 
-    function fortranString(text, state, isSensitive) {
+
+    function fortranString(text, state, isCase) {
         let value = text.toLowerCase();
         let offset = text.substring(1, text.length - 1).length - 1;
         let len = text.substring(1, text.length - 1).length;
         let template = ``;
 
-        if (isSensitive) {
+        if (isCase) {
             template += `if (${value} == to_lower(input(cursor:cursor + ${offset}))) then`;
         } else {
             template += `if (${value} == input(cursor:cursor + ${offset})) then`;
         }
 
         template += `
-                allocate(character(len=${len}) :: lexeme)
-                lexeme = input(cursor:cursor + ${offset})
-                cursor = cursor + ${len}
-                state = ${state}
-                return
+                if(len_temp > 0) then
+                    next_state = ${state}
+                end if
+                if (current_state /= next_state) then
+                    allocate(character(len=len_temp) :: lexeme)
+                    lexeme = temp_lexeme(:len_temp)
+                    next_state = current_state
+                    return
+                else
+                    current_state = ${state}
+                    next_state = ${state}
+                    len_temp = len_temp + ${len}
+                    temp_lexeme = input(cursor:cursor+${offset})
+                    cursor = cursor + ${len}
+                    cycle
+                end if
             end if
         `;
         
         return template;
     }
 
-    function fortranRange(text, state, isCase) {
+    function fortranRange(text, state, isSensitive) {
         let template = ``;
         let copy = text;
         const rangeRegex = /([^\s])-([^\s])/gm
@@ -192,20 +251,24 @@ export default function generateSyntaxTree(CST) {
 
         if (rangesFound?.length > 0) {
             rangesFound.forEach(range => {
-                if (isCase) {
-                    template += `if(iachar(to_lower(input(cursor:cursor))) >= iachar('${range[0].toLowerCase()}') .and. &
-                    iachar(to_lower(input(cursor:cursor))) <= iachar('${range[2].toLowerCase()}')) then`;
-                } else {
-                    template += `if(iachar(input(cursor:cursor)) >= iachar('${range[0]}') .and. &
-                                 iachar(input(cursor:cursor)) <= iachar('${range[2]}')) then`;
-                }
-
                 template += `
-                        allocate(character(len=1) :: lexeme)
-                        lexeme = input(cursor:cursor)
-                        cursor = cursor + 1
-                        state = ${state}
-                        return
+                    if(iachar(input(cursor:cursor)) >= iachar('${range[0]}') .and. iachar(input(cursor:cursor)) <= iachar('${range[2]}')) then
+                        if(len_temp > 0) then
+                            next_state = ${state}
+                        end if
+                        if (current_state /= next_state) then
+                            allocate(character(len=len_temp) :: lexeme)
+                            lexeme = temp_lexeme(:len_temp)
+                            next_state = current_state
+                            return
+                        else
+                            current_state = ${state}
+                            next_state = ${state}
+                            len_temp = len_temp + 1
+                            temp_lexeme(len_temp:len_temp) = input(cursor:cursor)
+                            cursor = cursor + 1
+                            cycle
+                        end if
                     end if
                 `;
             });
@@ -238,27 +301,31 @@ export default function generateSyntaxTree(CST) {
             return match;
         });
 
-        
         spaces = [...new Set(spaces)];
         copy = [...new Set(copy)];
 
-        const asciiChars = copy.map((char) => {
-            if (isCase) {   
-                return `char(${char.toLowerCase().charCodeAt(0)})`
-            } else {
-                return `char(${char.charCodeAt(0)})`
-            }
-        });
+        const asciiChars = copy.map((char) => `char(${char.charCodeAt(0)})`);
 
         if (spaces.length > 0 || asciiChars.length > 0) {
             const temporal = [...spaces, ...asciiChars].join(', ');
             template += `
-                if(findloc([${temporal}], ${(isCase) ? 'to_lower(input(cursor:cursor))' : 'input(cursor:cursor)'}, 1) > 0) then
-                    allocate(character(len=1) :: lexeme)
-                    lexeme = input(cursor:cursor)
-                    cursor = cursor + 1
-                    state = ${state}
-                    return
+                if(findloc([${temporal}], input(cursor:cursor), 1) > 0) then
+                    if(len_temp > 0) then
+                        next_state = ${state}
+                    end if
+                    if (current_state /= next_state) then
+                        allocate(character(len=len_temp) :: lexeme)
+                        lexeme = temp_lexeme(:len_temp)
+                        next_state = current_state
+                        return
+                    else
+                        current_state = ${state}
+                        next_state = ${state}
+                        len_temp = len_temp + 1
+                        temp_lexeme(len_temp:len_temp) = input(cursor:cursor)
+                        cursor = cursor + 1
+                        cycle
+                    end if
                 end if 
             `;
         }
@@ -266,6 +333,6 @@ export default function generateSyntaxTree(CST) {
         return template;
     }
 
-    return finalTree
+    return codeFortran
 }
 

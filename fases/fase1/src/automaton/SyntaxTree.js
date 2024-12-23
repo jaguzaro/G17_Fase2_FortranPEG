@@ -115,7 +115,6 @@ export class Concat extends Node {
      * @returns {boolean}
      */
     anulable() {
-        console.log(this.c1, this.c2)
         return this.c1.anulable() && this.c2.anulable();
     }
 }
