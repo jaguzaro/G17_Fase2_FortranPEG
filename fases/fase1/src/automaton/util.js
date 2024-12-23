@@ -6,7 +6,7 @@ import SyntaxTreeVisitor from './SyntaxTreeVisitor.js';
  *
  * @param {Productions[]} CST
  */
-export default function generateSyntaxTree(CST) {
+export async function generateSyntaxTree(CST) {
 
     let followPosTable = [];
     let leafValue = [];
@@ -308,6 +308,6 @@ export default function generateSyntaxTree(CST) {
         return template;
     }
 
-    return finalTree
+    return codeFortran
 }
 
