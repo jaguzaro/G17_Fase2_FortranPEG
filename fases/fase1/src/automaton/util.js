@@ -177,7 +177,7 @@ export default function generateSyntaxTree(CST) {
         return template;
     }
 
-    function fortranRange(text, state, isSensitive) {
+    function fortranRange(text, state, isCase) {
         let template = ``;
         let copy = text;
         const rangeRegex = /([^\s])-([^\s])/gm
@@ -185,8 +185,15 @@ export default function generateSyntaxTree(CST) {
 
         if (rangesFound?.length > 0) {
             rangesFound.forEach(range => {
+                if (isCase) {
+                    template += `if(iachar(to_lower(input(cursor:cursor))) >= iachar('${range[0].toLowerCase()}') .and. &
+                    iachar(to_lower(input(cursor:cursor))) <= iachar('${range[2].toLowerCase()}')) then`;
+                } else {
+                    template += `if(iachar(input(cursor:cursor)) >= iachar('${range[0]}') .and. &
+                                 iachar(input(cursor:cursor)) <= iachar('${range[2]}')) then`;
+                }
+
                 template += `
-                    if(iachar(input(cursor:cursor)) >= iachar('${range[0]}') .and. iachar(input(cursor:cursor)) <= iachar('${range[2]}')) then
                         allocate(character(len=1) :: lexeme)
                         lexeme = input(cursor:cursor)
                         cursor = cursor + 1
@@ -224,15 +231,22 @@ export default function generateSyntaxTree(CST) {
             return match;
         });
 
+        
         spaces = [...new Set(spaces)];
         copy = [...new Set(copy)];
 
-        const asciiChars = copy.map((char) => `char(${char.charCodeAt(0)})`);
+        const asciiChars = copy.map((char) => {
+            if (isCase) {   
+                return `char(${char.toLowerCase().charCodeAt(0)})`
+            } else {
+                return `char(${char.charCodeAt(0)})`
+            }
+        });
 
         if (spaces.length > 0 || asciiChars.length > 0) {
             const temporal = [...spaces, ...asciiChars].join(', ');
             template += `
-                if(findloc([${temporal}], input(cursor:cursor), 1) > 0) then
+                if(findloc([${temporal}], ${(isCase) ? 'to_lower(input(cursor:cursor))' : 'input(cursor:cursor)'}, 1) > 0) then
                     allocate(character(len=1) :: lexeme)
                     lexeme = input(cursor:cursor)
                     cursor = cursor + 1
