@@ -1,6 +1,7 @@
 import * as monaco from 'https://cdn.jsdelivr.net/npm/monaco-editor@0.50.0/+esm';
-import { parse } from './parser/gramatica.js';
-import { ErrorReglas } from './parser/error.js';
+import  {parse}  from './src/parser/gramatica.js';
+import { generateTokenizer } from './src/tokenizer/utils.js';
+import  generateSyntaxTree  from './src/automaton/util.js';
 
 
 export let ids = []
@@ -38,6 +39,11 @@ const analizar = () => {
     errores.length = 0
     try {
         const cst = parse(entrada)
+        console.log(cst)
+        const tree = generateSyntaxTree(cst)
+        console.log(tree)
+        const text = generateTokenizer(cst)
+        console.log(text)
 
         if(errores.length > 0){
             salida.setValue(
