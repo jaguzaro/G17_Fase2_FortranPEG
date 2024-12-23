@@ -137,18 +137,22 @@ export default function generateSyntaxTree(CST) {
     }
 
     console.log("Transition Table 2 =====>", transitionTable)
-
+    
     let codeFortran = ``;
+
     transitionTable?.forEach((transition) => {
-        codeFortran += `if (state == ${transition.state}) then`;
-        transition.symbs.forEach((symb) => {
-            if (symb.type === 'string') {
-                codeFortran += fortranString(symb.symb, symb.transition, symb.isCase);
-            } else if (symb.type === 'range') {
-                codeFortran += fortranRange(symb.symb, symb.transition, symb.isCase);
-            }
-        });
-        codeFortran += `end if`;
+        const flag = transition.symbs.some(current => current.transition.length > 0);
+        if (flag) {
+            codeFortran += `if (state == ${transition.state}) then`;
+            transition.symbs.forEach((symb) => {
+                if (symb.type === 'string' && symb.transition.length > 0) {
+                    codeFortran += fortranString(symb.symb, symb.transition, symb.isCase);
+                } else if (symb.type === 'range' && symb.transition.length > 0 && (symb.symb != "." && symb.assertion != "!")) {
+                    codeFortran += fortranRange(symb.symb, symb.transition, symb.isCase);
+                }
+            });
+            codeFortran += `end if`;
+        }
     });
 
     console.log(codeFortran);
