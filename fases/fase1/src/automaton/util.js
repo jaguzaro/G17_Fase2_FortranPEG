@@ -227,6 +227,7 @@ export async function generateSyntaxTree(CST) {
                 if (current_state /= next_state) then
                     allocate(character(len=len_temp) :: lexeme)
                     lexeme = temp_lexeme(:len_temp)
+                    next_state = current_state
                     return
                 else
                     current_state = ${state}
@@ -258,6 +259,7 @@ export async function generateSyntaxTree(CST) {
                         if (current_state /= next_state) then
                             allocate(character(len=len_temp) :: lexeme)
                             lexeme = temp_lexeme(:len_temp)
+                            next_state = current_state
                             return
                         else
                             current_state = ${state}
