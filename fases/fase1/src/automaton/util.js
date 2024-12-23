@@ -138,6 +138,113 @@ export default function generateSyntaxTree(CST) {
 
     console.log("Transition Table 2 =====>", transitionTable)
 
+    let codeFortran = ``;
+    transitionTable?.forEach((transition) => {
+        codeFortran += `if (state == ${transition.state}) then`;
+        transition.symbs.forEach((symb) => {
+            if (symb.type === 'string') {
+                codeFortran += fortranString(symb.symb, symb.transition, symb.isCase);
+            } else if (symb.type === 'range') {
+                codeFortran += fortranRange(symb.symb, symb.transition, symb.isCase);
+            }
+        });
+        codeFortran += `end if`;
+    });
+
+    console.log(codeFortran);
+
+    function fortranString(text, state, isSensitive) {
+        let value = text.toLowerCase();
+        let offset = text.substring(1, text.length - 1).length - 1;
+        let len = text.substring(1, text.length - 1).length;
+        let template = ``;
+
+        if (isSensitive) {
+            template += `if (${value} == to_lower(input(cursor:cursor + ${offset}))) then`;
+        } else {
+            template += `if (${value} == input(cursor:cursor + ${offset})) then`;
+        }
+
+        template += `
+                allocate(character(len=${len}) :: lexeme)
+                lexeme = input(cursor:cursor + ${offset})
+                cursor = cursor + ${len}
+                state = ${state}
+                return
+            end if
+        `;
+        
+        return template;
+    }
+
+    function fortranRange(text, state, isSensitive) {
+        let template = ``;
+        let copy = text;
+        const rangeRegex = /([^\s])-([^\s])/gm
+        const rangesFound = copy.match(rangeRegex);
+
+        if (rangesFound?.length > 0) {
+            rangesFound.forEach(range => {
+                template += `
+                    if(iachar(input(cursor:cursor)) >= iachar('${range[0]}') .and. iachar(input(cursor:cursor)) <= iachar('${range[2]}')) then
+                        allocate(character(len=1) :: lexeme)
+                        lexeme = input(cursor:cursor)
+                        cursor = cursor + 1
+                        state = ${state}
+                        return
+                    end if
+                `;
+            });
+            copy = copy.replace(rangeRegex, '');
+        }
+
+        const escapeToAscii = (match) => {
+            const escapeMap = {
+                ' ': 'char(32)',
+                '\\n': 'char(10)',
+                '\\r': 'char(13)',
+                '\\t': 'char(9)',
+                '\\b': 'char(8)',
+                '\\f': 'char(12)',
+                '\\v': 'char(11)',
+                "\\'": 'char(39)',
+                '\\"': 'char(34)',
+                '\\\\': 'char(92)'
+            };
+            return escapeMap[match] || match;
+        };
+
+        let spaces = [];
+        copy = copy.replace(/ |\\n|\\r|\\t|\\b|\\f|\\v|\\'|\\"|\\\\/gm, (match) => {
+            const ascii = escapeToAscii(match);
+            if (ascii !== match) {
+                spaces.push(ascii);
+                return '';
+            } 
+            return match;
+        });
+
+        spaces = [...new Set(spaces)];
+        copy = [...new Set(copy)];
+
+        const asciiChars = copy.map((char) => `char(${char.charCodeAt(0)})`);
+
+        if (spaces.length > 0 || asciiChars.length > 0) {
+            const temporal = [...spaces, ...asciiChars].join(', ');
+            template += `
+                if(findloc([${temporal}], input(cursor:cursor), 1) > 0) then
+                    allocate(character(len=1) :: lexeme)
+                    lexeme = input(cursor:cursor)
+                    cursor = cursor + 1
+                    state = ${state}
+                    return
+                end if 
+            `;
+        }
+    
+        return template;
+    }
+
     return finalTree
 }
 
