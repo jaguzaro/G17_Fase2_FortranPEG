@@ -92,4 +92,8 @@ export default class Tokenizer extends Visitor {
     visitIdentifier(node) {
         return '';
     }
+
+    visitAny(node){
+        return
+    }
 }

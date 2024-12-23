@@ -1,3 +1,4 @@
+import { Any } from '../visitor/CST.js';
 import Visitor from '../visitor/Visitor.js';
 import * as Syntax from './SyntaxTree.js';
 
@@ -48,5 +49,10 @@ export default class SyntaxTreeVisitor extends Visitor {
         const subTree = this.CST.find((subTree) => subTree.id === node.id);
         console.log("==== SUBTREE =====",subTree)
         return subTree.expr.accept(this);
+    }
+
+    visitAny(node){
+        console.log(node)
+        return new Syntax.Hoja(node.val, ++this.nodeCounter, "range", false, node.assertion);
     }
 }

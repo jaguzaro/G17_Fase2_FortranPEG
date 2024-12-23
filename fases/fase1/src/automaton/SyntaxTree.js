@@ -33,7 +33,7 @@ export class Hoja extends Node {
      *
      * @param {string} val
      */
-    constructor(val, pos, type, isCase) {
+    constructor(val, pos, type, isCase, assertion) {
         super();
         this.val = val;
         this._anulable = false;
@@ -42,6 +42,7 @@ export class Hoja extends Node {
         this.isCase = isCase;
         this.firstPos = this.primeraPos();
         this.lastPos = this.ultimaPos();
+        this.assertion = assertion;
     }
 
     /**

@@ -37,11 +37,12 @@ export class Union extends Node {
 }
     
 export class Expression extends Node {
-    constructor(expr, label, qty) {
+    constructor(expr, label, qty, assertion) {
         super();
         this.expr = expr;
 		this.label = label;
 		this.qty = qty;
+		this.assertion = assertion;
     }
 
     accept(visitor) {
@@ -93,6 +94,18 @@ export class Identifier extends Node {
 
     accept(visitor) {
         return visitor.visitIdentifier(this);
+    }
+}
+    
+export class Any extends Node {
+    constructor(val) {
+        super();
+        this.val = val;
+        this.assertion = null
+    }
+
+    accept(visitor) {
+        return visitor.visitAny(this);
     }
 }
     

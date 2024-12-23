@@ -8,4 +8,5 @@ export default class Visitor {
 	visitClass(node) {}
 	visitRange(node) {}
 	visitIdentifier(node) {}
+	visitAny(node) {}
 }

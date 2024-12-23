@@ -29,7 +29,8 @@ export default function generateSyntaxTree(CST) {
                 symb: node.val,
                 fp: [],
                 isCase: node.isCase,
-                type: node.type
+                type: node.type,
+                assertion: node.assertion
             }
             followPosTable.push(body)
         }
@@ -92,7 +93,8 @@ export default function generateSyntaxTree(CST) {
                     symb: item.symb.toString(),
                     transition: "",
                     isCase: item.isCase,
-                    type: item.type
+                    type: item.type,
+                    assertion: item.assertion
                 }))
         
     })
@@ -124,7 +126,8 @@ export default function generateSyntaxTree(CST) {
                                     symb: item.symb.toString(),
                                     transition: "",
                                     isCase: item.isCase,
-                                    type: item.type
+                                    type: item.type,
+                                    assertion: item.assertion
                                 })),
                         });
                     }

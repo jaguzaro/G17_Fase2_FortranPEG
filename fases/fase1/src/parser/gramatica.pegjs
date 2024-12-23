@@ -41,12 +41,15 @@ union
     }
 
 expresion
-  = ("@")? _ label:(identificador _ ":")?_ varios? _ expr:expresiones _ qty:([?+*]/conteo)?
+  = ("@")? _ label:(identificador _ ":")?_ assertion:varios? _ expr:expresiones _ qty:([?+*]/conteo)?
     {
-      return new n.Expression(expr, label, qty)
+      if(expr instanceof n.Any){
+        expr.assertion = assertion
+      }
+      return new n.Expression(expr, label, qty, assertion)
     }
 
-varios = ("!"/"&"/"$")
+varios = val:("!"/"&"/"$") { return val; }
 
 expresiones 
   = id:identificador
@@ -57,8 +60,7 @@ expresiones
   / val:literales temp:"i"? { return new n.String(val, temp === "i"); }
   / "(" _ @opciones _ ")"
   / valor:corchetes temp:"i"? { return new n.Range(valor.join(''), temp === "i"); }
-  / "."
-  / "!."
+  / val:"." { return new n.Any(val); }
 
 conteo = "|" _ (numero / id:identificador) _ "|"
         / "|" _ (numero / id:identificador)? _ ".." _ (numero / id2:identificador)? _ "|"
