@@ -233,7 +233,7 @@ export async function generateSyntaxTree(CST) {
                     current_state = ${state}
                     next_state = ${state}
                     len_temp = len_temp + ${len}
-                    temp_lexeme(len_temp:len_temp) = input(cursor:cursor+${offset})
+                    temp_lexeme = input(cursor:cursor+${offset})
                     cursor = cursor + ${len}
                     cycle
                 end if
