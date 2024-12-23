@@ -54,7 +54,6 @@ export default class Tokenizer extends Visitor {
 
     visitRange(node) {
         const n = { val: node.characters, qty: node.qty };
-        console.log(node, n)
         let template = ``;
         let copy = n.val;
         const regex = /([^\s])-([^\s])/gm;

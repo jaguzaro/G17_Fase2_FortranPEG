@@ -14,7 +14,6 @@ export async function generateSyntaxTree(CST) {
     let transitionTable = [];
 
     let nodeCounter = 0
-    console.log(CST)
     const visitor = new SyntaxTreeVisitor(CST);
     const syntaxTree = [CST[0]].map((subTree) => subTree.accept(visitor)).reduce(
         (tree, subTree) => new Or(tree, subTree)
@@ -69,7 +68,6 @@ export async function generateSyntaxTree(CST) {
     const finalTree = new Concat(syntaxTree, new Hoja('#', ++nodeCounter));
     postOrderTraversal(finalTree, visitFollow);
 
-    console.log(followPosTable)
     
     function combineFpForConsecutiveSymbs(array) {
         for (let i = 0; i < array.length - 1; i++) {
@@ -99,8 +97,6 @@ export async function generateSyntaxTree(CST) {
         
     })
 
-    console.log("Combined =====>", followPosTable)
-    console.log("Transition Table 1 =====>", transitionTable)
 
 
     function arraysEqual(a, b) {
@@ -139,7 +135,6 @@ export async function generateSyntaxTree(CST) {
         });
     }
 
-    console.log("Transition Table 2 =====>", transitionTable)
     
     let codeFortran = `
         module parser
@@ -212,7 +207,6 @@ export async function generateSyntaxTree(CST) {
         end module parser
     `;
 
-    console.log(codeFortran);
 
     function fortranString(text, state, isCase) {
         let value = text.toLowerCase();
