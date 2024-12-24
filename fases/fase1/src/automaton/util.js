@@ -185,7 +185,6 @@ export async function generateSyntaxTree(CST) {
         if (flag) {
             codeFortran += `\n if (current_state == ${transition.state}) then\n`;
             transition.symbs.forEach((symb) => {
-                if (transition.state === 0 && symb.transition.length > 0) codeFortran += `current_state = ${symb.transition}`;
                 if (symb.type === 'string' && symb.transition.length > 0)  {
                     codeFortran += fortranString(symb.symb, symb.transition, symb.isCase);
                 } else if (symb.type === 'range' && symb.transition.length > 0 && (symb.symb != "." && symb.assertion != "!")) {
